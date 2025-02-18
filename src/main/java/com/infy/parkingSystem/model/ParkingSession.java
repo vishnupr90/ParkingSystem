@@ -23,7 +23,7 @@ public class ParkingSession {
 	private Long id;
 
 	@NotBlank(message = "License plate is mandatory")
-	@Pattern(regexp = "^[A-Z]{2} \\d{1,6}$", message = "License plate must be in following format: ZH 123456")
+	//@Pattern(regexp = "^[A-Z]{2} \\d{1,6}$", message = "License plate must be in following format: ZH 123456")
 	private String licensePlate;
 
 	@NotNull(message = "Street Name is mandatory")

@@ -32,7 +32,7 @@ public class ProcessObservationService {
 
 	@Scheduled(cron = "0 0 * * * *") // Runs every hour
 	public void checkUnregisteredPlates() {
-		List<ObservedParkings> observations = observationRepository.findByIsFinedIsNull();
+		var observations = observationRepository.findByIsFinedIsNull();
 		for (ObservedParkings observation : observations) {
 			boolean isRegistered = parkingSessionRepository
 					.findByLicensePlateAndEndTimeIsNull(observation.getLicensePlate()).isPresent();
@@ -45,7 +45,7 @@ public class ProcessObservationService {
 	}
 
 	public String bulkUploadObservation(List<ObservedParkingDTO> observations) {
-		List<ObservedParkings> observationEntities = observations.stream().map(dto -> {
+		var observationEntities = observations.stream().map(dto -> {
 			ObservedParkings observation = new ObservedParkings();
 			observation.setLicensePlate(dto.licensePlate());
 			StreetPricing streetPricing = streetPricingRepository.findByStreetName(dto.streetName())

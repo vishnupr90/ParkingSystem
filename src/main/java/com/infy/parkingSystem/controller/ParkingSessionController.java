@@ -18,6 +18,7 @@ import com.infy.parkingSystem.model.ParkingSession;
 import com.infy.parkingSystem.service.ParkingSessionService;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -30,14 +31,18 @@ public class ParkingSessionController {
 
 	@PostMapping("/start")
 	public ResponseEntity<ParkingSession> startSession(
-			@RequestParam @NotBlank(message = "License plate is mandatory") String licensePlate,
+			@RequestParam @NotBlank(message = "License plate is mandatory") 
+			@Pattern(regexp = "^[a-zA-Z0-9]{4,8}$", message = "Invalid license plate format")
+			String licensePlate,
 			@RequestParam @NotBlank(message = "Street name is mandatory") String streetName) {
 		return ResponseEntity.ok(service.startSession(licensePlate, streetName));
 	}
 
 	@PostMapping("/end")
 	public ResponseEntity<ParkingSession> endSession(
-			@RequestParam @NotBlank(message = "License plate is mandatory") String licensePlate) {
+			@RequestParam @NotBlank(message = "License plate is mandatory")
+			@Pattern(regexp = "^[a-zA-Z0-9]{4,8}$", message = "Invalid license plate format")
+			String licensePlate) {
 		return ResponseEntity.ok(service.endSession(licensePlate));
 	}
 

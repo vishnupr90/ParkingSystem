@@ -26,7 +26,12 @@ public class ParkingSessionService {
 
 	@Transactional
 	public ParkingSession startSession(String licensePlate, String streetName) {
-		ParkingSession session = new ParkingSession();
+		
+		//validating if there is any active session
+		if (repository.findByLicensePlateAndEndTimeIsNull(licensePlate).isPresent()) {
+            throw new RuntimeException("A parking session with this license plate is already active.");
+        }
+		var session = new ParkingSession();
 		System.out.println("inside start session");
 		StreetPricing streetPricing = streetPricingRepository.findByStreetName(streetName)
 				.orElseThrow(() -> new RuntimeException("Street not found"));
@@ -39,7 +44,7 @@ public class ParkingSessionService {
 
 	@Transactional
 	public ParkingSession endSession(String licensePlate) {
-		ParkingSession session = repository.findByLicensePlateAndEndTimeIsNull(licensePlate)
+		var session = repository.findByLicensePlateAndEndTimeIsNull(licensePlate)
 				.orElseThrow(() -> new RuntimeException("Session not found"));
 		session.setEndTime(LocalDateTime.now());
 		session.setCost(calculateCost(session));
@@ -51,8 +56,8 @@ public class ParkingSessionService {
 		// streetPricingRepository.findByStreetName(session.getStreetName())
 		// .orElseThrow(() -> new RuntimeException("Street pricing not found"));
 
-		Duration duration = Duration.between(session.getStartTime(), session.getEndTime());
-		long minutes = duration.toMinutes();
+		var duration = Duration.between(session.getStartTime(), session.getEndTime());
+		var minutes = duration.toMinutes();
 		return (int) (minutes * session.getStreetPricing().getMinuteRate());
 	}
 
