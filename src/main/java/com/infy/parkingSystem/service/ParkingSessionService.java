@@ -12,6 +12,7 @@ import com.infy.parkingSystem.model.StreetPricing;
 import com.infy.parkingSystem.repository.ParkingSessionRepository;
 import com.infy.parkingSystem.repository.StreetPricingRepository;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,6 +54,14 @@ public class ParkingSessionService {
 
 	private int calculateCost(ParkingSession session) {
 
+		// no charges for parking within a Sunday
+		if (session.getStartTime().getDayOfWeek() == DayOfWeek.SUNDAY
+				&& session.getEndTime().getDayOfWeek() == DayOfWeek.SUNDAY
+				&& session.getStartTime().toLocalDate().equals(session.getEndTime().toLocalDate())) {
+			return 0;
+
+		}
+
 		var duration = Duration.between(session.getStartTime(), session.getEndTime());
 		var totalMinutes = duration.toMinutes();
 
@@ -63,19 +72,20 @@ public class ParkingSessionService {
 		return (int) (payableMinutes * session.getStreetPricing().getMinuteRate());
 	}
 
+	//calcuation for cars parked for several days
 	private long calculateNonPayableMinutes(LocalDateTime startTime, LocalDateTime endTime) {
-        long nonPayableMinutes = 0;
-        LocalDateTime currentTime = startTime;
+		long nonPayableMinutes = 0;
+		LocalDateTime currentTime = startTime;
 
-        //checking if the duration contains Sunday or hours between 21:00 and 8:00
-        while (currentTime.isBefore(endTime)) {
-            if (currentTime.getDayOfWeek().getValue() == 7 || 
-                currentTime.getHour() < 8 || currentTime.getHour() >= 21) {
-                nonPayableMinutes++;
-            }
-            currentTime = currentTime.plusMinutes(1);
-        }
-        return nonPayableMinutes;
+		// checking if the duration contains Sunday or hours between 21:00 and 8:00
+		while (currentTime.isBefore(endTime)) {
+			if (currentTime.getDayOfWeek().getValue() == 7 || currentTime.getHour() < 8
+					|| currentTime.getHour() >= 21) {
+				nonPayableMinutes++;
+			}
+			currentTime = currentTime.plusMinutes(1);
+		}
+		return nonPayableMinutes;
 	}
 
 	public List<ParkingSession> getAllSessions() {
