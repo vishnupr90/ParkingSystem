@@ -1,0 +1,74 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  javaHome: '/usr/lib/jvm/adoptopenjdk-22-hotspot'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        steps:
+          - task: JavaToolInstaller@1
+            inputs:
+              versionSpec: '22'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - task: Maven@4
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean install'
+              options: '-DskipTests'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
+
+  - stage: Test
+    dependsOn: Build
+    jobs:
+      - job: Test
+        steps:
+          - task: JavaToolInstaller@1
+            inputs:
+              versionSpec: '22'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - task: Maven@4
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'test'
+
+  - stage: Deploy
+    dependsOn: Test
+    jobs:
+      - deployment: Deploy
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: drop
+
+                - task: CopyFiles@2
+                  inputs:
+                    SourceFolder: '$(Pipeline.Workspace)/drop'
+                    Contents: '**'
+                    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+# Need azure configuration details
+#					- task: AzureWebApp@1
+#					  inputs:
+#					    azureSubscription: '<Your Azure Subscription>'
+#					    appType: 'webApp'
+#					    appName: '<Your App Service Name>'
+#					    package: '$(Build.ArtifactStagingDirectory)/*.jar'
